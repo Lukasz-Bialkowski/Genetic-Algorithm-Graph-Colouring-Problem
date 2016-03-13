@@ -34,8 +34,9 @@ public class Main {
 //        Stworz graf z wczytanych danych
         graph = new Graph(dataMatrix);
         graph.toString();
-        testujAlgorytm();
+//        testujAlgorytm();
         algorithm();
+//        hillClimbing();
     }
 
     public void algorithm() {
@@ -407,6 +408,42 @@ public class Main {
         averagePopulationScore = quality / StaticVariables.POPULATION_SIZE;
         System.out.println("Srednia wartosc bledu w populacji: "+averagePopulationScore);
         printer.savePopulationScores(averagePopulationScore, bestPopulationScore, worstPopulationScore);
+
+    }
+
+    private void hillClimbing() {
+        int failHits = 0;
+        int iterationCount = 0;
+        double newScore = 0;
+        int[] sollution = new int[this.graph.getMyNumVertices()];
+        int[] newSollution = null;
+
+        for (int j = 0; j < sollution.length; j++) {
+            sollution[j] = (int) (Math.random() * StaticVariables.COLOURS_COUNT);
+        }
+
+        double oldScore=-1;
+
+        while (failHits < 100000 && oldScore!=0){
+            iterationCount ++ ;
+            newSollution = new int[sollution.length];
+            System.arraycopy(sollution, 0, newSollution, 0, sollution.length);
+            int index = (int) (Math.random() * newSollution.length);
+            newSollution[index] = (newSollution[index] + 1) % StaticVariables.COLOURS_COUNT;
+            newScore = qualityFunction(newSollution);
+            oldScore = qualityFunction(sollution);
+            if (newScore <= oldScore) {
+                oldScore = newScore;
+                newScore = -1;
+                sollution = newSollution;
+                failHits ++;
+            }
+            System.out.println(oldScore);
+        }
+
+        System.out.println(iterationCount);
+        System.out.println("Wynik: " + qualityFunction(sollution));
+        printArray(sollution);
 
     }
 }
