@@ -13,6 +13,9 @@ public class Main {
     private Graph graph;
     private List<int[]> population = new ArrayList<>();
     private boolean solutionFound = false;
+    private int[] pocketChromosome = null;
+    private double bestScoreSoFar=-1;
+    private int colors = -1;
 
     public static void main(String args[]) {
         Main graphColoringProblem = new Main();
@@ -29,16 +32,32 @@ public class Main {
 //        Stworz graf z wczytanych danych
         graph = new Graph(dataMatrix);
         graph.toString();
+        testujAlgorytm();
+        algorithm();
+    }
 
+    public void algorithm() {
+        int generationsCounter = 0;
         population = initializePopulation(graph.getMyNumVertices(), StaticVariables.COLOURS_COUNT, StaticVariables.POPULATION_SIZE);
         printPopulation(population);
         holePopulationQuality(population);
 
-        testujAlgorytm();
-    }
+        while (!solutionFound && generationsCounter < StaticVariables.GENERATIONS_NUMBER) {
 
-    public void algorithm() {
+            crossover(population);
+            mutatePopulation(population);
+            population = selection(population);
+            holePopulationQuality(population);
+            generationsCounter++;
+        }
 
+        if(solutionFound){
+            System.out.println("Best score: " + bestScoreSoFar);
+            printArray(pocketChromosome);
+            System.out.println(" wynik " + qualityFunction(pocketChromosome));
+            System.out.println("Liczba kolorow: " + colors);
+
+        }
     }
 
     private void testujAlgorytm() {
@@ -210,7 +229,7 @@ public class Main {
     }
 
     private List<int[]> cossoverTwoChromosomes(int[] firstChromosome, int[] secondChromosome) {
-        int maxCrossingIndex = (int) firstChromosome.length / 2;
+        int maxCrossingIndex = (int) (Math.random()*firstChromosome.length);
         int tempValue;
         int chromosomeLength = firstChromosome.length;
 
@@ -284,10 +303,12 @@ public class Main {
             }
         }
         int colorNumber = (maxColor-minColor+1);
-        double finalScore = (collisionCount+1)*colorNumber;
-
+//        double finalScore = (collisionCount+1)*colorNumber;
+        double finalScore = collisionCount;
         if(collisionCount == 0){
+            this.colors = colorNumber;
             this.solutionFound = true;
+            this.pocketChromosome = chromosome;
         }
 
         return finalScore;
@@ -321,18 +342,18 @@ public class Main {
 
         if (population.size() > 0) {
             double initial = qualityFunction(population.get(0));
-            quality+=initial;
             bestPopulationScore = initial;
             worstPopulationScore = initial;
             bestChromosomeInPopulation = population.get(0);
             worstChromosomeInPopulation = population.get(0);
         }
 
-        for (int i = 1; i < population.size(); i++) {
+        for (int i = 0; i < population.size(); i++) {
             int[] chromosome = population.get(i);
             double result = qualityFunction(chromosome);
 
             if (result < bestPopulationScore) {
+
                 bestPopulationScore = result;
                 bestChromosomeInPopulation = chromosome;
             }
@@ -341,6 +362,15 @@ public class Main {
                 worstChromosomeInPopulation = chromosome;
             }
             quality += result;
+        }
+
+        if (this.bestScoreSoFar == -1) {
+            this.bestScoreSoFar = worstPopulationScore;
+        }
+
+        if(bestPopulationScore < this.bestScoreSoFar){
+            this.bestScoreSoFar = bestPopulationScore;
+            this.pocketChromosome = bestChromosomeInPopulation;
         }
 
         System.out.println("Wartosc sumaryczna bledow w calej populacji: " + quality);
