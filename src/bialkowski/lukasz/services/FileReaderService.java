@@ -1,6 +1,8 @@
 package bialkowski.lukasz.services;
 
 
+import bialkowski.lukasz.globals.StaticVariables;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -9,7 +11,7 @@ import java.util.List;
 
 public class FileReaderService {
 
-    private static final String FILE_NAME = "GEOM20.txt";
+    private static final String FILE_NAME = StaticVariables.GRAPH_FILE;
 
     public List<int[]> readAndParse() {
         List<String[]> strings = readFiles();

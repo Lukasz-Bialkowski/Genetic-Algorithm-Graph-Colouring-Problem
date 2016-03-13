@@ -1,6 +1,7 @@
 package bialkowski.lukasz;
 
 import bialkowski.lukasz.globals.StaticVariables;
+import bialkowski.lukasz.services.FilePrinter;
 import bialkowski.lukasz.services.FileReaderService;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ public class Main {
     private int[] pocketChromosome = null;
     private double bestScoreSoFar=-1;
     private int colors = -1;
+    private FilePrinter printer = new FilePrinter();
 
     public static void main(String args[]) {
         Main graphColoringProblem = new Main();
@@ -45,8 +47,15 @@ public class Main {
         while (!solutionFound && generationsCounter < StaticVariables.GENERATIONS_NUMBER) {
 
             crossover(population);
+            System.out.println("Po crossover");
+            printPopulation(population);
             mutatePopulation(population);
+            System.out.println("Po mutacji");
+            printPopulation(population);
             population = selection(population);
+            System.out.println("Po selekcji");
+            printPopulation(population);
+
             holePopulationQuality(population);
             generationsCounter++;
         }
@@ -58,6 +67,7 @@ public class Main {
             System.out.println("Liczba kolorow: " + colors);
 
         }
+        printer.closeStream();
     }
 
     private void testujAlgorytm() {
@@ -121,10 +131,12 @@ public class Main {
         List<int[]> competitorsChromosomes = new ArrayList<>();
 
         while (newPopulationSize < StaticVariables.POPULATION_SIZE) {
-
             competitors = new HashSet<>();
+            competitorsChromosomes = new ArrayList<>();
             for (int i = 0; i < StaticVariables.SELECTION_COMPETITION_SIZE; i++) {
-                while (!competitors.add((int) (Math.random() * currentPopulationSize))) {}
+
+                while (!competitors.add((int) (Math.random() * currentPopulationSize))) {
+                }
             }
 
             for (Integer i : competitors) {
@@ -215,14 +227,15 @@ public class Main {
 
         for (int i = 0; i < probabilityArray.length; i++) {
             if(probabilityArray[i] <= StaticVariables.CROSSOVER_POSSIBILITY ){
-                returnedChromosomes = cossoverTwoChromosomes(population.get(i), population.get(population.size()-1-i));
+                returnedChromosomes = cossoverTwoChromosomes(population.get(i), population.get(population.size() - 1 - i));
+                for (int j = 0; j < returnedChromosomes.size(); j++) {
+                    newChromosomes.add(returnedChromosomes.get(j));
+                }
             }
             if(returnedChromosomes.size()>2){
                 System.out.println("KLAJSLKJASKFLJAKJF:LASJF");
             }
-            for (int j = 0; j < returnedChromosomes.size(); j++) {
-                newChromosomes.add(returnedChromosomes.get(j));
-            }
+
         }
 
         population.addAll(newChromosomes);
@@ -276,6 +289,7 @@ public class Main {
     private double qualityFunction(int[] chromosome){
         double result = 0;
         int collisionCount = 0;
+        double weightDiff = 0;
         int minColor = -1;
         int maxColor = -1;
 
@@ -298,8 +312,10 @@ public class Main {
                 int siblingColor = chromosome[edge.getDestination()-1];
                 int weight = edge.getWeight();
 
-                if(isInvalid(weight, currentColor, siblingColor))
+                if (isInvalid(weight, currentColor, siblingColor)) {
+                    weightDiff += Math.abs(weight - Math.abs(currentColor-siblingColor));
                     collisionCount++;
+                }
             }
         }
         int colorNumber = (maxColor-minColor+1);
@@ -311,7 +327,7 @@ public class Main {
             this.pocketChromosome = chromosome;
         }
 
-        return finalScore;
+        return weightDiff;
     }
 
     private boolean isInvalid(int weight, int v1, int v2) {
@@ -390,5 +406,7 @@ public class Main {
 
         averagePopulationScore = quality / StaticVariables.POPULATION_SIZE;
         System.out.println("Srednia wartosc bledu w populacji: "+averagePopulationScore);
+        printer.savePopulationScores(averagePopulationScore, bestPopulationScore, worstPopulationScore);
+
     }
 }
