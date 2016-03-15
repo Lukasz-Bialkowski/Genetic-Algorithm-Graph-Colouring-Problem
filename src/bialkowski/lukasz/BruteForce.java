@@ -6,7 +6,7 @@ import bialkowski.lukasz.services.FileReaderService;
 import java.util.HashSet;
 import java.util.List;
 
-public class BruteForce {
+public class BruteForce implements IAlgorithm{
 
     private Graph graph;
 
@@ -17,11 +17,10 @@ public class BruteForce {
         List<int[]> dataMatrix = fileReaderService.readAndParse();
 //        Stworz graf z wczytanych danych
         graph = new Graph(dataMatrix);
-
-        bruteForce();
     }
 
-    public int bruteForce(){
+    @Override
+    public int algorithm(){
         int vertices = this.graph.getMyNumVertices();
         int colors = StaticVariables.COLOURS_COUNT;
         int possibilities = (int) Math.pow(colors, vertices);

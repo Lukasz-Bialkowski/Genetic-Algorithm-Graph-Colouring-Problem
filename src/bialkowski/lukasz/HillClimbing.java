@@ -6,7 +6,7 @@ import bialkowski.lukasz.services.FileReaderService;
 import java.util.HashSet;
 import java.util.List;
 
-public class HillClimbing {
+public class HillClimbing implements IAlgorithm{
 
     private Graph graph;
 
@@ -17,11 +17,10 @@ public class HillClimbing {
         List<int[]> dataMatrix = fileReaderService.readAndParse();
 //        Stworz graf z wczytanych danych
         graph = new Graph(dataMatrix);
-
-        hillClimbing();
     }
 
-    private void hillClimbing() {
+    @Override
+    public int algorithm() {
         int failHits = 0;
         int iterationCount = 0;
         double newScore = 0;
@@ -54,7 +53,7 @@ public class HillClimbing {
         System.out.println(iterationCount);
         System.out.println("Wynik: " + qualityFunction(sollution));
         printArray(sollution);
-
+        return  iterationCount;
     }
 
     private void printArray(int[] arr) {

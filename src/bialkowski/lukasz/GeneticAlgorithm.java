@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-public class GeneticAlgorithm {
+public class GeneticAlgorithm implements IAlgorithm{
 
     private Graph graph;
     private boolean solutionFound = false;
@@ -17,23 +17,15 @@ public class GeneticAlgorithm {
     private int colors = -1;
     private FilePrinter printer = new FilePrinter();
 
-    public static void main(String args[]) {
-//        BruteForce bruteForce = new BruteForce();
-//        HillClimbing hillClimbing = new HillClimbing();
-        GeneticAlgorithm graphColoringProblem = new GeneticAlgorithm();
-    }
-
     public GeneticAlgorithm() {
-
         FileReaderService fileReaderService = new FileReaderService();
         List<int[]> dataMatrix = fileReaderService.readAndParse();
         graph = new Graph(dataMatrix);
-        geneticAlgorithm();
-
     }
 
-    public void geneticAlgorithm() {
-        int generationsCounter = 0;
+    @Override
+    public int algorithm() {
+        int generationsCounter = 1;
         List<int[]> population = initializePopulation(graph.getMyNumVertices(), StaticVariables.COLOURS_COUNT, StaticVariables.POPULATION_SIZE);
         printPopulation(population);
         holePopulationQuality(population);
@@ -58,6 +50,8 @@ public class GeneticAlgorithm {
 
         printSummary();
         printer.closeStream();
+
+        return generationsCounter;
     }
 
     private void printSummary() {
