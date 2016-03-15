@@ -5,14 +5,12 @@ import bialkowski.lukasz.services.FilePrinter;
 import bialkowski.lukasz.services.FileReaderService;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-public class Main {
+public class GeneticAlgorithm {
 
     private Graph graph;
-    private List<int[]> population = new ArrayList<>();
     private boolean solutionFound = false;
     private int[] pocketChromosome = null;
     private double bestScoreSoFar=-1;
@@ -20,28 +18,23 @@ public class Main {
     private FilePrinter printer = new FilePrinter();
 
     public static void main(String args[]) {
-        Main graphColoringProblem = new Main();
+//        BruteForce bruteForce = new BruteForce();
+//        HillClimbing hillClimbing = new HillClimbing();
+        GeneticAlgorithm graphColoringProblem = new GeneticAlgorithm();
     }
 
-    public Main() {
+    public GeneticAlgorithm() {
 
-//        Serwis do czytania z pliku
         FileReaderService fileReaderService = new FileReaderService();
-
-//        Odczytaj plik i zparsuj na inty
         List<int[]> dataMatrix = fileReaderService.readAndParse();
-
-//        Stworz graf z wczytanych danych
         graph = new Graph(dataMatrix);
-        graph.toString();
-//        testujAlgorytm();
-        algorithm();
-//        hillClimbing();
+        geneticAlgorithm();
+
     }
 
-    public void algorithm() {
+    public void geneticAlgorithm() {
         int generationsCounter = 0;
-        population = initializePopulation(graph.getMyNumVertices(), StaticVariables.COLOURS_COUNT, StaticVariables.POPULATION_SIZE);
+        List<int[]> population = initializePopulation(graph.getMyNumVertices(), StaticVariables.COLOURS_COUNT, StaticVariables.POPULATION_SIZE);
         printPopulation(population);
         holePopulationQuality(population);
 
@@ -50,9 +43,11 @@ public class Main {
             crossover(population);
             System.out.println("Po crossover");
             printPopulation(population);
+
             mutatePopulation(population);
             System.out.println("Po mutacji");
             printPopulation(population);
+
             population = selection(population);
             System.out.println("Po selekcji");
             printPopulation(population);
@@ -61,14 +56,15 @@ public class Main {
             generationsCounter++;
         }
 
-        if(solutionFound){
-            System.out.println("Best score: " + bestScoreSoFar);
-            printArray(pocketChromosome);
-            System.out.println(" wynik " + qualityFunction(pocketChromosome));
-            System.out.println("Liczba kolorow: " + colors);
-
-        }
+        printSummary();
         printer.closeStream();
+    }
+
+    private void printSummary() {
+        System.out.print("Najlepszy chromosom: \t");
+        printArray(pocketChromosome);
+        System.out.println("Best score: \t" + bestScoreSoFar);
+        System.out.println("Liczba kolorow: \t" + colors);
     }
 
     private void testujAlgorytm() {
@@ -129,7 +125,7 @@ public class Main {
         int newPopulationSize = 0;
         int currentPopulationSize = currentPopulation.size();
         HashSet<Integer> competitors;
-        List<int[]> competitorsChromosomes = new ArrayList<>();
+        List<int[]> competitorsChromosomes;
 
         while (newPopulationSize < StaticVariables.POPULATION_SIZE) {
             competitors = new HashSet<>();
@@ -224,7 +220,7 @@ public class Main {
         probabilityArray = generateProbabilityArray(probabilityArray);
         int lastChromosomeIndex = population.size()-1;
         List<int[]> newChromosomes = new ArrayList<>();
-        List<int[]> returnedChromosomes=new ArrayList<>();
+        List<int[]> returnedChromosomes;
 
         for (int i = 0; i < probabilityArray.length; i++) {
             if(probabilityArray[i] <= StaticVariables.CROSSOVER_POSSIBILITY ){
@@ -233,12 +229,7 @@ public class Main {
                     newChromosomes.add(returnedChromosomes.get(j));
                 }
             }
-            if(returnedChromosomes.size()>2){
-                System.out.println("KLAJSLKJASKFLJAKJF:LASJF");
-            }
-
         }
-
         population.addAll(newChromosomes);
     }
 
@@ -287,10 +278,11 @@ public class Main {
         return arr;
     }
 
-    private double qualityFunction(int[] chromosome){
+    public double qualityFunction(int[] chromosome){
+
         double result = 0;
-        int collisionCount = 0;
         double weightDiff = 0;
+        int collisionCount = 0;
         int minColor = -1;
         int maxColor = -1;
 
@@ -319,16 +311,16 @@ public class Main {
                 }
             }
         }
-        int colorNumber = (maxColor-minColor+1);
-//        double finalScore = (collisionCount+1)*colorNumber;
-        double finalScore = collisionCount;
-        if(collisionCount == 0){
-            this.colors = colorNumber;
+        this.colors = (maxColor - minColor + 1);
+
+//        double finalScore = (collisionCount+1)*colors;
+        if(weightDiff == 0){
+            this.bestScoreSoFar = weightDiff;
             this.solutionFound = true;
             this.pocketChromosome = chromosome;
         }
-
         return weightDiff;
+//        return finalScore;
     }
 
     private boolean isInvalid(int weight, int v1, int v2) {
@@ -344,16 +336,15 @@ public class Main {
                 System.out.print(ints[j] + " ");
             }
             System.out.println();
-
-//            System.out.println(" = > "+ qualityFunction(ints));
         }
     }
 
     private void holePopulationQuality(List<int[]> population){
+
         double quality = 0;
         double bestPopulationScore = -1;
         double worstPopulationScore = -1;
-        double averagePopulationScore;
+
         int[] bestChromosomeInPopulation = null;
         int[] worstChromosomeInPopulation = null;
 
@@ -370,7 +361,6 @@ public class Main {
             double result = qualityFunction(chromosome);
 
             if (result < bestPopulationScore) {
-
                 bestPopulationScore = result;
                 bestChromosomeInPopulation = chromosome;
             }
@@ -393,57 +383,16 @@ public class Main {
         System.out.println("Wartosc sumaryczna bledow w calej populacji: " + quality);
         System.out.println("Najlepsza wartosc funkcji: " + bestPopulationScore);
         System.out.print("Wartosci chromosomu najlepszego: ");
-        for (int i : bestChromosomeInPopulation) {
-            System.out.print(i+" ");
-        }
-        System.out.println();
+        printArray(bestChromosomeInPopulation);
 
         System.out.println("Najgorszy wartosc funkcji: " + worstPopulationScore);
         System.out.print("Wartosci chromosomu najgorszego: ");
-        for (int i : worstChromosomeInPopulation) {
-            System.out.print(i+" ");
-        }
-        System.out.println();
+        printArray(worstChromosomeInPopulation);
 
-        averagePopulationScore = quality / StaticVariables.POPULATION_SIZE;
-        System.out.println("Srednia wartosc bledu w populacji: "+averagePopulationScore);
+        double averagePopulationScore = quality / StaticVariables.POPULATION_SIZE;
+        System.out.println("Srednia wartosc bledu w populacji: "+ averagePopulationScore);
+
         printer.savePopulationScores(averagePopulationScore, bestPopulationScore, worstPopulationScore);
-
     }
 
-    private void hillClimbing() {
-        int failHits = 0;
-        int iterationCount = 0;
-        double newScore = 0;
-        int[] sollution = new int[this.graph.getMyNumVertices()];
-        int[] newSollution = null;
-
-        for (int j = 0; j < sollution.length; j++) {
-            sollution[j] = (int) (Math.random() * StaticVariables.COLOURS_COUNT);
-        }
-
-        double oldScore=-1;
-
-        while (failHits < 100000 && oldScore!=0){
-            iterationCount ++ ;
-            newSollution = new int[sollution.length];
-            System.arraycopy(sollution, 0, newSollution, 0, sollution.length);
-            int index = (int) (Math.random() * newSollution.length);
-            newSollution[index] = (newSollution[index] + 1) % StaticVariables.COLOURS_COUNT;
-            newScore = qualityFunction(newSollution);
-            oldScore = qualityFunction(sollution);
-            if (newScore <= oldScore) {
-                oldScore = newScore;
-                newScore = -1;
-                sollution = newSollution;
-                failHits ++;
-            }
-            System.out.println(oldScore);
-        }
-
-        System.out.println(iterationCount);
-        System.out.println("Wynik: " + qualityFunction(sollution));
-        printArray(sollution);
-
-    }
 }
