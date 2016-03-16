@@ -277,6 +277,7 @@ public class GeneticAlgorithm implements IAlgorithm{
 
         double result = 0;
         double weightDiff = 0;
+        double weightDiff2 = 0;
         int collisionCount = 0;
         int minColor = -1;
         int maxColor = -1;
@@ -299,7 +300,7 @@ public class GeneticAlgorithm implements IAlgorithm{
             for (Edge edge : edges) {
                 int siblingColor = chromosome[edge.getDestination()-1];
                 int weight = edge.getWeight();
-
+                weightDiff2 += Math.abs(weight - Math.abs(currentColor-siblingColor));
                 if (isInvalid(weight, currentColor, siblingColor)) {
                     weightDiff += Math.abs(weight - Math.abs(currentColor-siblingColor));
                     collisionCount++;
@@ -309,14 +310,16 @@ public class GeneticAlgorithm implements IAlgorithm{
         this.colors = (maxColor - minColor + 1);
 
 //        double finalScore = (collisionCount+1)*colors;
-        double finalScore = colors*colors*((int)(weightDiff));
+//        double finalScore = colors*colors*((int)(weightDiff));
+        double finalScore = weightDiff;
         if(weightDiff == 0){
             this.bestScoreSoFar = weightDiff;
             this.solutionFound = true;
             this.pocketChromosome = chromosome;
         }
 //        return weightDiff;
-        return finalScore;
+        return weightDiff2;
+//        return finalScore;
     }
 
     private boolean isInvalid(int weight, int v1, int v2) {
@@ -439,36 +442,47 @@ public class GeneticAlgorithm implements IAlgorithm{
     public void accumulateAlgorithm() {
         int maxLength = 0;
         ArrayList<ArrayList<MaxMinAvgDTO>> chartsList = new ArrayList<>();
-        ArrayList<MaxMinAvgDTO> oneCycle;
+
+        int generationsCounter = 1;
+        int colors = StaticVariables.COLOURS_COUNT;
 
         for (int i = 0; i < 10; i++) {
-            oneCycle = new ArrayList<>();
-            int generationsCounter = 1;
-            List<int[]> population = initializePopulation(graph.getMyNumVertices(), StaticVariables.COLOURS_COUNT, StaticVariables.POPULATION_SIZE);
-            printPopulation(population);
-            oneCycle.add(accumulatePopulationScores(population));
 
-            while (!solutionFound && generationsCounter < StaticVariables.GENERATIONS_NUMBER) {
+            while (generationsCounter < StaticVariables.GENERATIONS_NUMBER) {
 
-                crossover(population);
-                System.out.println("Po crossover");
+
+                ArrayList<MaxMinAvgDTO> oneCycle = new ArrayList<>();
+                generationsCounter = 1;
+                List<int[]> population = initializePopulation(graph.getMyNumVertices(), colors, StaticVariables.POPULATION_SIZE);
                 printPopulation(population);
-
-                mutatePopulation(population);
-                System.out.println("Po mutacji");
-                printPopulation(population);
-
-                population = selection(population);
-                System.out.println("Po selekcji");
-                printPopulation(population);
-
                 oneCycle.add(accumulatePopulationScores(population));
-                generationsCounter++;
+
+                while (!solutionFound && generationsCounter < StaticVariables.GENERATIONS_NUMBER) {
+
+                    crossover(population);
+                    System.out.println("Po crossover");
+                    printPopulation(population);
+
+                    mutatePopulation(population);
+                    System.out.println("Po mutacji");
+                    printPopulation(population);
+
+                    population = selection(population);
+                    System.out.println("Po selekcji");
+                    printPopulation(population);
+
+                    oneCycle.add(accumulatePopulationScores(population));
+                    generationsCounter++;
+                }
+                colors--;
+                solutionFound = false;
+                if (maxLength < generationsCounter) {
+                    maxLength = generationsCounter;
+                }
+                if(generationsCounter>=StaticVariables.GENERATIONS_NUMBER)
+                    chartsList.add(oneCycle);
+
             }
-            if (maxLength < generationsCounter) {
-                maxLength = generationsCounter;
-            }
-            chartsList.add(oneCycle);
         }
 
         int i =0;
@@ -495,6 +509,7 @@ public class GeneticAlgorithm implements IAlgorithm{
 
         System.out.println(chartsList.size());
         System.out.println(maxLength);
+        System.out.println(colors);
         //printSummary();
         printer.closeStream();
 
