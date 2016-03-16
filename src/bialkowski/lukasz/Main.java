@@ -8,15 +8,18 @@ public class Main {
 //        algorithm = new BruteForce();
 //        int iterationsBF = algorithm.algorithm();
 
-        algorithm = new HillClimbing();
-        int iterationsHC = algorithm.algorithm();
+//        algorithm = new HillClimbing();
+//        int iterationsHC = algorithm.algorithm();
 
         algorithm = new GeneticAlgorithm();
         int iterationsBGCP = algorithm.algorithm();
 
 //        System.out.println("Brute force: " + iterationsBF);
-        System.out.println("Hill climbing: " + iterationsHC);
+//        System.out.println("Hill climbing: " + iterationsHC);
         System.out.println("Genetic algorithm: " + iterationsBGCP);
+
+//        GeneticAlgorithm gc = new GeneticAlgorithm();
+//        gc.accumulateAlgorithm();
 
 
 //        algorithm = new BruteForce();

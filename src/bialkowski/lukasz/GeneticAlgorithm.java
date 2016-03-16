@@ -1,6 +1,7 @@
 package bialkowski.lukasz;
 
 import bialkowski.lukasz.globals.StaticVariables;
+import bialkowski.lukasz.model.MaxMinAvgDTO;
 import bialkowski.lukasz.services.FilePrinter;
 import bialkowski.lukasz.services.FileReaderService;
 
@@ -48,7 +49,7 @@ public class GeneticAlgorithm implements IAlgorithm{
             generationsCounter++;
         }
 
-        printSummary();
+//        printSummary();
         printer.closeStream();
 
         return generationsCounter;
@@ -308,13 +309,14 @@ public class GeneticAlgorithm implements IAlgorithm{
         this.colors = (maxColor - minColor + 1);
 
 //        double finalScore = (collisionCount+1)*colors;
+        double finalScore = colors*colors*((int)(weightDiff));
         if(weightDiff == 0){
             this.bestScoreSoFar = weightDiff;
             this.solutionFound = true;
             this.pocketChromosome = chromosome;
         }
-        return weightDiff;
-//        return finalScore;
+//        return weightDiff;
+        return finalScore;
     }
 
     private boolean isInvalid(int weight, int v1, int v2) {
@@ -387,6 +389,116 @@ public class GeneticAlgorithm implements IAlgorithm{
         System.out.println("Srednia wartosc bledu w populacji: "+ averagePopulationScore);
 
         printer.savePopulationScores(averagePopulationScore, bestPopulationScore, worstPopulationScore);
+    }
+
+    private MaxMinAvgDTO accumulatePopulationScores(List<int[]> population){
+
+        double quality = 0;
+        double bestPopulationScore = -1;
+        double worstPopulationScore = -1;
+
+        int[] bestChromosomeInPopulation = null;
+        int[] worstChromosomeInPopulation = null;
+
+        if (population.size() > 0) {
+            double initial = qualityFunction(population.get(0));
+            bestPopulationScore = initial;
+            worstPopulationScore = initial;
+            bestChromosomeInPopulation = population.get(0);
+            worstChromosomeInPopulation = population.get(0);
+        }
+
+        for (int i = 0; i < population.size(); i++) {
+            int[] chromosome = population.get(i);
+            double result = qualityFunction(chromosome);
+
+            if (result < bestPopulationScore) {
+                bestPopulationScore = result;
+                bestChromosomeInPopulation = chromosome;
+            }
+            if (result > worstPopulationScore) {
+                worstPopulationScore = result;
+                worstChromosomeInPopulation = chromosome;
+            }
+            quality += result;
+        }
+
+        if (this.bestScoreSoFar == -1) {
+            this.bestScoreSoFar = worstPopulationScore;
+        }
+
+        if(bestPopulationScore < this.bestScoreSoFar){
+            this.bestScoreSoFar = bestPopulationScore;
+            this.pocketChromosome = bestChromosomeInPopulation;
+        }
+
+        double averagePopulationScore = quality / StaticVariables.POPULATION_SIZE;
+        return new MaxMinAvgDTO(worstPopulationScore, bestPopulationScore, averagePopulationScore);
+    }
+
+    public void accumulateAlgorithm() {
+        int maxLength = 0;
+        ArrayList<ArrayList<MaxMinAvgDTO>> chartsList = new ArrayList<>();
+        ArrayList<MaxMinAvgDTO> oneCycle;
+
+        for (int i = 0; i < 10; i++) {
+            oneCycle = new ArrayList<>();
+            int generationsCounter = 1;
+            List<int[]> population = initializePopulation(graph.getMyNumVertices(), StaticVariables.COLOURS_COUNT, StaticVariables.POPULATION_SIZE);
+            printPopulation(population);
+            oneCycle.add(accumulatePopulationScores(population));
+
+            while (!solutionFound && generationsCounter < StaticVariables.GENERATIONS_NUMBER) {
+
+                crossover(population);
+                System.out.println("Po crossover");
+                printPopulation(population);
+
+                mutatePopulation(population);
+                System.out.println("Po mutacji");
+                printPopulation(population);
+
+                population = selection(population);
+                System.out.println("Po selekcji");
+                printPopulation(population);
+
+                oneCycle.add(accumulatePopulationScores(population));
+                generationsCounter++;
+            }
+            if (maxLength < generationsCounter) {
+                maxLength = generationsCounter;
+            }
+            chartsList.add(oneCycle);
+        }
+
+        int i =0;
+        double sumaMax=0;
+        double sumaMin=0;
+        double sumaAvg=0;
+        int specificGenerationCounter=0;
+
+        while (i<maxLength) {
+            for (ArrayList<MaxMinAvgDTO> chart : chartsList) {
+                if (i < chart.size()) {
+                    MaxMinAvgDTO dto = chart.get(i);
+                    specificGenerationCounter++;
+                    sumaMax += dto.getMax();
+                    sumaMin += dto.getMin();
+                    sumaAvg += dto.getAvg();
+                }
+            }
+
+            printer.savePopulationScores(sumaAvg/specificGenerationCounter,sumaMax/specificGenerationCounter,sumaMin/specificGenerationCounter);
+            sumaMax = sumaMin = sumaAvg = 0;
+            i++;
+        }
+
+        System.out.println(chartsList.size());
+        System.out.println(maxLength);
+        //printSummary();
+        printer.closeStream();
+
+        //return generationsCounter;
     }
 
 }
