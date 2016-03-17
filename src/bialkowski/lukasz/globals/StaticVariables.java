@@ -64,4 +64,5 @@ public class StaticVariables {
     public static final int GENERATIONS_NUMBER = 1000;
     public static final String CHARTS_FILE = "charts7.txt";
     public static final String GRAPH_FILE = "GEOM100.txt";
+    public static double PHI=0.5;
 }

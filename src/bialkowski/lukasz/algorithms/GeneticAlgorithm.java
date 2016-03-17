@@ -292,9 +292,8 @@ public class GeneticAlgorithm implements IAlgorithm {
             }
         }
         this.colors = (maxColor - minColor + 1);
-
-//        double finalScore = (collisionCount+1)*colors;
-        double finalScore = colors+((int)(weightDiff));
+        double finalScore = colors + weightDiff;
+//        double finalScore = StaticVariables.PHI * colors + (1 - StaticVariables.PHI)* weightDiff;
         if(weightDiff == 0){
             this.bestScoreSoFar = weightDiff;
             this.solutionFound = true;
