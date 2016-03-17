@@ -1,12 +1,14 @@
-package bialkowski.lukasz;
+package bialkowski.lukasz.algorithms;
 
+import bialkowski.lukasz.graph.Edge;
+import bialkowski.lukasz.graph.Graph;
 import bialkowski.lukasz.globals.StaticVariables;
 import bialkowski.lukasz.services.FileReaderService;
 
 import java.util.HashSet;
 import java.util.List;
 
-public class BruteForce implements IAlgorithm{
+public class BruteForce implements IAlgorithm {
 
     private Graph graph;
 

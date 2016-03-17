@@ -1,4 +1,4 @@
-package bialkowski.lukasz;
+package bialkowski.lukasz.graph;
 
 public class Edge  {
     private final int source;

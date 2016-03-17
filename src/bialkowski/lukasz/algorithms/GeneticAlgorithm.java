@@ -1,5 +1,7 @@
-package bialkowski.lukasz;
+package bialkowski.lukasz.algorithms;
 
+import bialkowski.lukasz.graph.Edge;
+import bialkowski.lukasz.graph.Graph;
 import bialkowski.lukasz.globals.StaticVariables;
 import bialkowski.lukasz.model.MaxMinAvgDTO;
 import bialkowski.lukasz.services.FilePrinter;
@@ -9,15 +11,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-public class GeneticAlgorithm implements IAlgorithm{
+public class GeneticAlgorithm implements IAlgorithm {
 
-    private Graph graph;
+    public Graph graph;
     private boolean solutionFound = false;
     private int[] pocketChromosome = null;
     private double bestScoreSoFar=-1;
     private int colors = -1;
     private FilePrinter printer = new FilePrinter();
-
     public GeneticAlgorithm() {
         FileReaderService fileReaderService = new FileReaderService();
         List<int[]> dataMatrix = fileReaderService.readAndParse();
@@ -28,38 +29,30 @@ public class GeneticAlgorithm implements IAlgorithm{
     public int algorithm() {
         int generationsCounter = 1;
         List<int[]> population = initializePopulation(graph.getMyNumVertices(), StaticVariables.COLOURS_COUNT, StaticVariables.POPULATION_SIZE);
-        printPopulation(population);
         holePopulationQuality(population);
 
         while (!solutionFound && generationsCounter < StaticVariables.GENERATIONS_NUMBER) {
 
             crossover(population);
-            System.out.println("Po crossover");
-            printPopulation(population);
-
             mutatePopulation(population);
-            System.out.println("Po mutacji");
-            printPopulation(population);
-
             population = selection(population);
-            System.out.println("Po selekcji");
-            printPopulation(population);
-
             holePopulationQuality(population);
             generationsCounter++;
         }
 
-//        printSummary();
+        printSummary();
         printer.closeStream();
 
         return generationsCounter;
     }
 
     private void printSummary() {
+        System.out.println("################################## \t");
         System.out.print("Najlepszy chromosom: \t");
         printArray(pocketChromosome);
-        System.out.println("Best score: \t" + bestScoreSoFar);
+        System.out.println("Najlepszy wynik funkcji dopasowania: \t" + bestScoreSoFar);
         System.out.println("Liczba kolorow: \t" + colors);
+        System.out.println("################################## \t");
     }
 
     private void testujAlgorytm() {
@@ -233,14 +226,6 @@ public class GeneticAlgorithm implements IAlgorithm{
         int tempValue;
         int chromosomeLength = firstChromosome.length;
 
-        /**
-         * */
-        printArray(firstChromosome);
-        System.out.print(  " mutuje z ");
-        printArray(secondChromosome);
-        /**
-         * */
-
         int[] newChromosome1 = new int[chromosomeLength];
         System.arraycopy( firstChromosome, 0, newChromosome1, 0, firstChromosome.length );
         int[] newChromosome2 = new int[chromosomeLength];
@@ -300,7 +285,6 @@ public class GeneticAlgorithm implements IAlgorithm{
             for (Edge edge : edges) {
                 int siblingColor = chromosome[edge.getDestination()-1];
                 int weight = edge.getWeight();
-                weightDiff2 += Math.abs(weight - Math.abs(currentColor-siblingColor));
                 if (isInvalid(weight, currentColor, siblingColor)) {
                     weightDiff += Math.abs(weight - Math.abs(currentColor-siblingColor));
                     collisionCount++;
@@ -310,16 +294,13 @@ public class GeneticAlgorithm implements IAlgorithm{
         this.colors = (maxColor - minColor + 1);
 
 //        double finalScore = (collisionCount+1)*colors;
-//        double finalScore = colors*colors*((int)(weightDiff));
-        double finalScore = weightDiff;
+        double finalScore = colors+((int)(weightDiff));
         if(weightDiff == 0){
             this.bestScoreSoFar = weightDiff;
             this.solutionFound = true;
             this.pocketChromosome = chromosome;
         }
-//        return weightDiff;
-        return weightDiff2;
-//        return finalScore;
+        return finalScore;
     }
 
     private boolean isInvalid(int weight, int v1, int v2) {
@@ -439,81 +420,45 @@ public class GeneticAlgorithm implements IAlgorithm{
         return new MaxMinAvgDTO(worstPopulationScore, bestPopulationScore, averagePopulationScore);
     }
 
-    public void accumulateAlgorithm() {
-        int maxLength = 0;
-        ArrayList<ArrayList<MaxMinAvgDTO>> chartsList = new ArrayList<>();
-
+    public int accumulateAlgorithm() {
+        ArrayList<MaxMinAvgDTO> oneCycle = new ArrayList<>();
         int generationsCounter = 1;
+        int global =0;
         int colors = StaticVariables.COLOURS_COUNT;
 
-        for (int i = 0; i < 10; i++) {
-
-            while (generationsCounter < StaticVariables.GENERATIONS_NUMBER) {
-
-
-                ArrayList<MaxMinAvgDTO> oneCycle = new ArrayList<>();
-                generationsCounter = 1;
-                List<int[]> population = initializePopulation(graph.getMyNumVertices(), colors, StaticVariables.POPULATION_SIZE);
-                printPopulation(population);
+        while (generationsCounter < StaticVariables.GENERATIONS_NUMBER) {
+            oneCycle = new ArrayList<>();
+            generationsCounter = 1;
+            List<int[]> population = initializePopulation(graph.getMyNumVertices(), colors, StaticVariables.POPULATION_SIZE);
+            oneCycle.add(accumulatePopulationScores(population));
+            while (!solutionFound && generationsCounter < StaticVariables.GENERATIONS_NUMBER) {
+                crossover(population);
+                mutatePopulation(population);
+                population = selection(population);
                 oneCycle.add(accumulatePopulationScores(population));
-
-                while (!solutionFound && generationsCounter < StaticVariables.GENERATIONS_NUMBER) {
-
-                    crossover(population);
-                    System.out.println("Po crossover");
-                    printPopulation(population);
-
-                    mutatePopulation(population);
-                    System.out.println("Po mutacji");
-                    printPopulation(population);
-
-                    population = selection(population);
-                    System.out.println("Po selekcji");
-                    printPopulation(population);
-
-                    oneCycle.add(accumulatePopulationScores(population));
-                    generationsCounter++;
-                }
-                colors--;
-                solutionFound = false;
-                if (maxLength < generationsCounter) {
-                    maxLength = generationsCounter;
-                }
-                if(generationsCounter>=StaticVariables.GENERATIONS_NUMBER)
-                    chartsList.add(oneCycle);
-
+                generationsCounter++;
             }
+            if (solutionFound) {
+                colors--;
+                System.out.println("Ponawiam algorytm dla zakresu kolorow " + colors);
+                solutionFound = false;
+            }
+            global+=generationsCounter;
         }
 
-        int i =0;
         double sumaMax=0;
         double sumaMin=0;
         double sumaAvg=0;
-        int specificGenerationCounter=0;
 
-        while (i<maxLength) {
-            for (ArrayList<MaxMinAvgDTO> chart : chartsList) {
-                if (i < chart.size()) {
-                    MaxMinAvgDTO dto = chart.get(i);
-                    specificGenerationCounter++;
-                    sumaMax += dto.getMax();
-                    sumaMin += dto.getMin();
-                    sumaAvg += dto.getAvg();
-                }
-            }
-
-            printer.savePopulationScores(sumaAvg/specificGenerationCounter,sumaMax/specificGenerationCounter,sumaMin/specificGenerationCounter);
-            sumaMax = sumaMin = sumaAvg = 0;
-            i++;
+        for (MaxMinAvgDTO dto : oneCycle) {
+            sumaMax = dto.getMax();
+            sumaMin = dto.getMin();
+            sumaAvg = dto.getAvg();
+            printer.savePopulationScores(sumaAvg,sumaMax,sumaMin);
         }
-
-        System.out.println(chartsList.size());
-        System.out.println(maxLength);
-        System.out.println(colors);
-        //printSummary();
+        printSummary();
         printer.closeStream();
-
-        //return generationsCounter;
+        return global;
     }
 
 }
