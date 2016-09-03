@@ -50,7 +50,6 @@ public class GeneticAlgorithm implements IAlgorithm {
         System.out.println("################################## \t");
         System.out.print("Najlepszy chromosom: \t");
         printArray(pocketChromosome);
-        System.out.println("Najlepszy wynik funkcji dopasowania: \t" + bestScoreSoFar);
         System.out.println("Liczba kolorow: \t" + colors);
         System.out.println("################################## \t");
     }
@@ -292,7 +291,7 @@ public class GeneticAlgorithm implements IAlgorithm {
             }
         }
         this.colors = (maxColor - minColor + 1);
-        double finalScore = colors + weightDiff;
+        double finalScore = colors* weightDiff;
 //        double finalScore = StaticVariables.PHI * colors + (1 - StaticVariables.PHI)* weightDiff;
         if(weightDiff == 0){
             this.bestScoreSoFar = weightDiff;
